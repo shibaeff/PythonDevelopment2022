@@ -1,6 +1,6 @@
 import shutil
 import venv
-imprt shutil
+import shutil
 import subprocess
 
 venv.create('venv', with_pip=True)
