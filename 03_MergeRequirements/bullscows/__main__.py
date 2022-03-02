@@ -2,6 +2,10 @@ from . import gameplay
 import sys
 import urllib.request
 
+def fatal():
+    print("Usage: python -m bullscows dictionary_link [length]")
+    quit(1)
+
 def ask(prompt: str, valid: list[str] = None) -> str:
     if valid is not None:
         guess = input(prompt)
