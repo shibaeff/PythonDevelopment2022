@@ -38,3 +38,4 @@ if try_url:
         fatal()
 
 words = dictionary.split()
+print(gameplay(ask, inform, words))
