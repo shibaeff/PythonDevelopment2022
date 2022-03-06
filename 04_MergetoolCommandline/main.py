@@ -46,16 +46,16 @@ class Generator(cmd.Cmd):
             case ['iron_kingdoms', _]:
                 generator_object = arguments[1] + 'FullnameGenerator'
                 cls = eval(f'i.{generator_object}')()
-                print(cls.get_name_simple(language=self.current_language))
+                print(cls.get_name_simple(language=self.lang))
             case ['elven', _]:
                 generator_object = arguments[1] + 'NamesGenerator'
                 cls = eval(f'i.{generator_object}')()
-                print(cls.get_name_simple(language=self.current_language))
+                print(cls.get_name_simple(language=self.lang))
             case [_, _]:
                 generator_object = [s for s in dir(i) if s.endswith('NamesGenerator')][0]
                 cls = eval(f'i.{generator_object}')()
                 match arguments[1]:
                     case 'male':
-                        print(cls.get_name_simple(gender=GENDER.MALE, language=self.current_language))
+                        print(cls.get_name_simple(gender=GENDER.MALE, language=self.lang))
                     case 'female':
-                        print(cls.get_name_simple(gender=GENDER.FEMALE, language=self.current_language))
+                        print(cls.get_name_simple(gender=GENDER.FEMALE, language=self.lang))
