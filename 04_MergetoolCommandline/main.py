@@ -59,3 +59,4 @@ class Generator(cmd.Cmd):
                         print(cls.get_name_simple(gender=GENDER.MALE, language=self.lang))
                     case 'female':
                         print(cls.get_name_simple(gender=GENDER.FEMALE, language=self.lang))
+Generator().cmdloop()
