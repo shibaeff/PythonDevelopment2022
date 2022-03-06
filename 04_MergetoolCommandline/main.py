@@ -37,3 +37,25 @@ class Generator(cmd.Cmd):
                 for object_name in generator_objects:
                     cls = eval(f'i.{object_name}')()
                     print(f'class {object_name} has {cls.get_names_number()} names')
+
+    def do_generate(self, args):
+        # print(self.current_language)
+        arguments = shlex.split(args)
+        i = importlib.import_module('pynames.generators.'+arguments[0])
+        match arguments:
+            case ['iron_kingdoms', _]:
+                generator_object = arguments[1] + 'FullnameGenerator'
+                cls = eval(f'i.{generator_object}')()
+                print(cls.get_name_simple(language=self.current_language))
+            case ['elven', _]:
+                generator_object = arguments[1] + 'NamesGenerator'
+                cls = eval(f'i.{generator_object}')()
+                print(cls.get_name_simple(language=self.current_language))
+            case [_, _]:
+                generator_object = [s for s in dir(i) if s.endswith('NamesGenerator')][0]
+                cls = eval(f'i.{generator_object}')()
+                match arguments[1]:
+                    case 'male':
+                        print(cls.get_name_simple(gender=GENDER.MALE, language=self.current_language))
+                    case 'female':
+                        print(cls.get_name_simple(gender=GENDER.FEMALE, language=self.current_language))
