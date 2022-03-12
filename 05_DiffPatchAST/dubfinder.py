@@ -2,6 +2,7 @@
 import inspect
 import sys
 import importlib
+import ast
 
 def get_funcs(entity):
     subentities = inspect.getmembers(entity, inspect.ismodule)
@@ -22,7 +23,12 @@ def get_functions(module):
     return funcs
 
 def parse_function(func):
-    pass
+    source = inspect.getsource(func)
+    try:
+        tree = ast.parse(source)
+    except Exception:
+        pass
+
 
 def compare_functions(funcs):
     pass
