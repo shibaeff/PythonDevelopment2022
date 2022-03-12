@@ -22,10 +22,22 @@ def get_functions(module):
     print(funcs)
     return funcs
 
+def astformat(node):
+    if isinstance(node, ast.AST):
+        args = []
+        for field in node._fields:
+            value = getattr(node, field)
+            args.append(astformat(value))
+        return f"{node.__class__.__name__} {''.join(args)}\n"
+    elif isinstance(node, list):
+        return "".join(astformat(x) for x in node)
+    return str(node)
+
 def parse_function(func):
     source = inspect.getsource(func)
     try:
         tree = ast.parse(source)
+        nodes = astformat(tree)
     except Exception:
         pass
 
@@ -38,4 +50,5 @@ print(f"Got modules: {modules}")
 funcs = []
 for mod in modules:
     funcs.extend(get_functions(mod))
-print(funcs)
+for func in funcs:
+    
