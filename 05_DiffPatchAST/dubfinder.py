@@ -1,75 +1,75 @@
-#! /bin/python3.10
+import argparse
+import importlib
 import inspect
 import sys
-import importlib
 import textwrap
 import ast
+import difflib
+from collections import defaultdict
 
-def get_funcs(entity):
-    print(entity)
-    subentities = inspect.getmembers(entity, inspect.ismodule)
-    subentities.extend(inspect.getmembers(entity, inspect.isclass))
-    funcs = []
-    for sub in subentities:
-        funcs.extend(get_funcs(sub))
-    return funcs
-
-def get_functions(module, name):
-    members = inspect.getmembers(module)
-    functions = []
-    for elem in members:
-        if inspect.isfunction(elem[1]):
-            functions += [(f"{name}.{elem[0]}", elem[1]), ]  # такая схема - чтобы сохранить путь к функции
-        elif inspect.isclass(elem[1]):
-            if not elem[0].startswith('__'):
-                functions += get_functions(elem[1], f"{name}.{elem[0]}")
-    return functions
-
-def parse(fun):
-    code = textwrap.dedent(inspect.getsource(fun[1]))
-    tree = ast.parse(code)
-    nodes = ast.walk(tree)
-    for node in nodes:
-        if hasattr(node, "id"):
-            node.id = "_"
-        elif hasattr(node, "name"):
-            node.name = "_"
-        elif hasattr(node, "arg"):
-            node.arg = "_"
-        elif hasattr(node, "attr"):
-            node.attr = "_"
-    return fun[0], ast.unparse(tree)
+functions = dict()
+diffb = defaultdict()
 
 
-def astformat(node):
-    if isinstance(node, ast.AST):
-        args = []
-        for field in node._fields:
-            value = getattr(node, field)
-            args.append(astformat(value))
-        return f"{node.__class__.__name__} {''.join(args)}\n"
-    elif isinstance(node, list):
-        return "".join(astformat(x) for x in node)
-    return str(node)
+def get_functions(pkg, prefix_line):
+    for name, value in inspect.getmembers(pkg):
+        if inspect.isclass(value) and name.startswith("__"):
+            continue
+        if inspect.isfunction(value):
+            full_func_name = prefix_line + '.' + name
+            functions[full_func_name] = value
+        elif inspect.ismodule(value) and name in cmd_args or inspect.isclass(value):
+            get_functions(value, prefix_line + '.' + name)
 
 
-def parse_function(func):
-    source = inspect.getsource(func)
-    try:
-        tree = ast.parse(source)
-        nodes = astformat(tree)
-    except Exception:
-        pass
+def read_args():
+    return sys.argv[1:]
 
 
-def compare_functions(funcs):
-    pass
+def find_similar():
+    global body
+    current_keys = list(diffb.keys())
+    found = False
+    for i, body in enumerate(current_keys):
+        if difflib.SequenceMatcher(None, body, f_body).ratio() > THRESHOLD:
+            diffb.setdefault(body, []).append(f_name)
+            found = True
+    if not found:
+        # new body appear:
+        diffb.setdefault(f_body, []).append(f_name)
 
-modules = sys.argv[1:]
-print(f"Got modules: {modules}")
-funcs = []
-for mod in modules:
-    funcs.extend(get_functions(mod))
-print(funcs)
 
-    
+def output():
+    global body
+    out = list()
+    for body, f_names in diffb.items():
+        if len(f_names) > 1:
+            list.sort(f_names)
+            out.append(f_names[0] + ' ' + f_names[1])
+    list.sort(out)
+    for line in out:
+        print(line)
+
+
+if __name__ == "__main__":
+    global cmd_args
+    cmd_args = read_args()
+
+    for m in cmd_args:
+        pkg = importlib.import_module(m)
+        get_functions(pkg, m)
+
+    for f_name, pointer in functions.items():
+        text = textwrap.dedent(inspect.getsource(pointer))
+        tree = ast.parse(text)
+        for item in ast.walk(tree):
+            for var_id in ['name', 'id', 'arg', 'attr']:
+                if var_id in dir(item):
+                    setattr(item, var_id, "_")
+
+        functions[f_name] = ast.unparse(tree)
+    THRESHOLD = 0.95
+    for f_name, f_body in functions.items():
+        find_similar()
+
+    output()
